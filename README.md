@@ -7,6 +7,9 @@ This project investigates microbial community structure and interaction networks
 The current stage focuses on establishing baseline microbial interaction patterns using correlation-based network analysis.
 ---
 Coral Microbiome Analysis
+Coral Microbiome Network
+
+![Coral Network](coral_analysis/coral_network_final.png)
 
 Methodology
 
