@@ -30,14 +30,12 @@ Hypothesis
 
 ---
 
- Methods
+ ## Tools & Methods
+- **R packages**: `vegan`, `ggplot2`, `igraph`, `readxl`, `tidyverse`
+- **Alpha diversity**: Shannon index
+- **Beta diversity**: PCoA (Bray‑Curtis) for coral; PCA (Hellinger) for soil
+- **Network analysis**: Correlation‑based (|r| ≥ 0.85), visualised with `igraph`
 
-All analyses were performed in R using:
-
-- **vegan** – alpha diversity (Shannon), beta diversity (Bray‑Curtis PCoA, Hellinger‑PCA)
-- **igraph** – correlation‑based co‑occurrence networks
-- **ggplot2** – visualisation
-- **readxl, tidyverse** – data handling
 
 *Due to hardware limitations, the soil beta‑diversity analysis used PCA on Hellinger‑transformed data – a fast, ecologically valid alternative.*
 
@@ -54,3 +52,12 @@ Key Findings
 Conclusion:
 Stress restructures microbial communities in both systems, but the effect is more pronounced in coral (acute thermal event) than in soil (gradual, multi‑factorial). Coral networks are host‑driven and centralised; soil networks reflect a flexible, functionally redundant community.
 
+## Citation
+If you use this work, please cite the repository:  
+[https://github.com/koraginjalabhavana-collab/climate-microbiome-stress-analysis](https://github.com/koraginjalabhavana-collab/climate-microbiome-stress-analysis)
+##linkedin : www.linkedin.com/in/bhavana-koraginjala-493805334
+## Contact
+For questions or collaboration, please open an issue or reach out via GitHub.
+
+
+This independent research project was conducted during my Master’s in Microbiology, entirely without lab access. By harnessing public sequencing data and open‑source tools, I built a reproducible computational workflow to investigate how climate stress reshapes microbial communities – a reflection of resourcefulness, self‑directed learning, and a deep commitment to science.
