@@ -1,56 +1,86 @@
---------------------------------------------
-Coral Microbiome Network Analysis
---------------------------------------------
 
-Step 1: Load required libraries
+# ============================================================================
+# Coral Microbiome Analysis
+# Dataset: PRJNA1010003 – Coral microbiome of the 2020 mass bleaching event
+# Stress factor: Bleaching (August 2020) vs Recovery (later months)
+# ============================================================================
+
+# 1. Load libraries ---------------------------------------------------------
 library(readxl)
-library(tidyverse)
-library(reshape2)
+library(vegan)
+library(ggplot2)
 library(igraph)
 
-Step 2: Set working directory
-setwd("C:/Users/HP/OneDrive/Desktop/4th sem/research")
+# 2. Set working directory (change to your project root) --------------------
+# setwd("C:/Users/.../climate-microbiome-stress-analysis")
 
-Step 3: Load dataset
-coral_abundance <- read_excel(
-  "coral data set/supplementary_table_s2_updated2_ycae001.xlsx",
-  skip = 2)
+# 3. Read coral abundance data ----------------------------------------------
+cat("\n========== CORAL MICROBIOME ==========\n")
+coral_file <- "coral data set/supplementary_table_s2_updated2_ycae001.xlsx"
+coral_abundance <- read_excel(coral_file, skip = 2)
 
-Step 4: Prepare numeric data
+# 4. Extract sample IDs and numeric abundance ------------------------------
+sample_ids <- coral_abundance[[1]]
 coral_numeric <- coral_abundance[, -1]
+coral_numeric <- as.data.frame(lapply(coral_numeric, as.numeric))
+coral_numeric[is.na(coral_numeric)] <- 0
 
-Step 5: Remove zero-variance features
-coral_filtered <- coral_numeric[, apply(coral_numeric, 2, sd) != 0]
+# 5. Create stress factor: Bleaching (Aug 2020) vs Recovery (all others) ---
+date_part <- substr(sample_ids, nchar(sample_ids)-5, nchar(sample_ids))
+condition_coral <- ifelse(date_part == "202008", "Bleaching", "Recovery")
+condition_coral <- factor(condition_coral, levels = c("Bleaching", "Recovery"))
+cat("Stress distribution:\n")
+print(table(condition_coral))
 
-Step 6: Compute correlation matrix (subset for performance)
-cor_small <- cor(coral_filtered[, 1:50])
-
-Step 7: Filter strong correlations
-cor_small[abs(cor_small) < 0.85] <- 0
-diag(cor_small) <- 0
-
-Step 8: Convert to edge list
-cor_melt <- melt(cor_small)
-edges_small <- subset(cor_melt, value != 0)
-edges_small <- edges_small[edges_small$Var1 != edges_small$Var2, ]
-
-Step 9: Create network
-network_small <- graph_from_data_frame(edges_small, directed = FALSE)
-
-Step 10: Calculate node importance (degree)
-deg <- degree(network_small)
-
-Step 11: Scale node size by importance
-V(network_small)$size <- deg * 2
-
-Step 12: Plot network
-plot(network_small,
-     layout = layout_with_fr,
-     vertex.label = NA)
-
-Step 13: Save network plot
-png("coral_network_final.png", width = 800, height = 800)
-plot(network_small,
-     layout = layout_with_fr,
-     vertex.label = NA)
+# 6. Alpha diversity (Shannon) ----------------------------------------------
+shannon_coral <- diversity(coral_numeric, index = "shannon")
+png("figures/coral_shannon.png", width = 800, height = 600)
+boxplot(shannon_coral ~ condition_coral,
+        main = "Coral Microbial Shannon Diversity",
+        xlab = "Stress Status", ylab = "Shannon Index",
+        col = c("red", "blue"))
 dev.off()
+cat("Coral Shannon boxplot saved.\n")
+
+# 7. Beta diversity – PCoA (Bray‑Curtis) -----------------------------------
+dist_coral <- vegdist(coral_numeric, method = "bray")
+pcoa_coral <- cmdscale(dist_coral, k = 2, eig = TRUE)
+scores_coral <- as.data.frame(pcoa_coral$points)
+colnames(scores_coral) <- c("PCoA1", "PCoA2")
+scores_coral$Condition <- condition_coral
+var_exp <- round(pcoa_coral$eig[1:2] / sum(pcoa_coral$eig) * 100, 1)
+
+p_pcoa <- ggplot(scores_coral, aes(x = PCoA1, y = PCoA2, color = Condition)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(aes(group = Condition), type = "norm", linetype = 2, level = 0.95) +
+  labs(title = "Coral Microbiome – PCoA (Bray‑Curtis)",
+       x = paste0("PCoA1 (", var_exp[1], "%)"),
+       y = paste0("PCoA2 (", var_exp[2], "%)"),
+       color = "Stress Status") +
+  theme_minimal()
+ggsave("figures/coral_pcoa.png", p_pcoa, width = 8, height = 6, dpi = 300)
+cat("Coral PCoA plot saved.\n")
+
+# 8. Network analysis (correlation‑based, |r| >= 0.85) ---------------------
+cat("Building coral correlation network...\n")
+coral_cor <- cor(coral_numeric, method = "spearman")
+coral_cor[abs(coral_cor) < 0.85] <- 0
+diag(coral_cor) <- 0
+coral_network <- graph_from_adjacency_matrix(coral_cor,
+                                             mode = "undirected",
+                                             weighted = TRUE,
+                                             diag = FALSE)
+# Remove isolated nodes
+coral_network <- delete.vertices(coral_network, degree(coral_network) == 0)
+
+png("figures/coral_network_final.png", width = 800, height = 800)
+plot(coral_network,
+     layout = layout_with_fr,
+     vertex.size = degree(coral_network) * 2,
+     vertex.label = NA,
+     main = "Coral Microbial Network")
+dev.off()
+cat("Coral network saved with", vcount(coral_network), "nodes and",
+    ecount(coral_network), "edges.\n")
+
+cat("\n===== Coral analysis completed =====\n")
