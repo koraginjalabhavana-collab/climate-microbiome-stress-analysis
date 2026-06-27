@@ -14,7 +14,7 @@ library(igraph)
 # setwd("C:/Users/.../climate-microbiome-stress-analysis")
 
 # 3. Read soil abundance data -----------------------------------------------
-cat("\n========== SOIL MICROBIOME ==========\n")
+
 soil_file <- "soil data set/41467_2023_41524_MOESM4_ESM.xlsx"
 soil_abundance <- read_excel(soil_file, sheet = "Figure 1a")
 
